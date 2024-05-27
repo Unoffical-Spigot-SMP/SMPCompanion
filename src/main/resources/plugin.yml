@@ -1,0 +1,6 @@
+name: SMPCompanion
+version: '${version}'
+main: net.overlordmc.smpcompanion.SMPCompanion
+api-version: '1.20'
+authors: [KaspianDev]
+description: A modular core for SMP's.
