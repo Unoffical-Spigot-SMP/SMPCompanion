@@ -13,31 +13,36 @@ import java.util.Arrays;
 
 public class ModuleProperties {
 
-    private static final String MODULE_DIRECTORY = "modules";
+    private static final String MODULE_DIRECTORY = "/modules";
 
     private final Default defaults;
-    private final String moduleName;
+    private final Module module;
     private final YamlDocument document;
 
-    public ModuleProperties(SMPCompanion plugin, String moduleName, Object... properties) throws IOException {
+    public ModuleProperties(SMPCompanion plugin, Module module, Object... properties) {
         this.defaults = new Default();
-        this.moduleName = moduleName;
-        this.document = YamlDocument.create(
-                new File(plugin.getDataFolder() + MODULE_DIRECTORY, moduleName),
-                GeneralSettings.builder().setUseDefaults(false).build());
+        this.module = module;
+        try {
+            this.document = YamlDocument.create(
+                    new File(plugin.getDataFolder() + MODULE_DIRECTORY, module.getName() + ".yml"),
+                    GeneralSettings.builder().setUseDefaults(false).build());
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create a configuration file for module " + module.getName(), e);
+        }
+        loadProperties(new Default());
         Arrays.stream(properties).forEach(this::loadProperties);
         reload();
     }
 
-    public ModuleProperties(SMPCompanion plugin, String moduleName) throws IOException {
-        this(plugin, moduleName, new Default());
+    public ModuleProperties(SMPCompanion plugin, Module module) {
+        this(plugin, module, new Object[0]);
     }
 
     public void save() {
         try {
             document.save();
         } catch (IOException ex) {
-            throw new RuntimeException("Could not save module " + moduleName, ex);
+            throw new RuntimeException("Could not save module " + module.getName(), ex);
         }
     }
 
@@ -46,7 +51,7 @@ public class ModuleProperties {
             save();
             document.reload();
         } catch (IOException ex) {
-            throw new RuntimeException("Could not reload module " + moduleName, ex);
+            throw new RuntimeException("Could not reload module " + module.getName(), ex);
         }
     }
 
@@ -67,7 +72,7 @@ public class ModuleProperties {
                     document.set(path, field.get(object));
                 }
             } catch (IllegalAccessException ex) {
-                throw new RuntimeException("Could not load property '" + path + "' for module " + moduleName, ex);
+                throw new RuntimeException("Could not load property '" + path + "' for module " + module.getName(), ex);
             }
         }
     }
